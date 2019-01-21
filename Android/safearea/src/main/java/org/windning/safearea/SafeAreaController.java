@@ -27,7 +27,15 @@ public class SafeAreaController {
 
     private SafeAreaController(Activity activity) {
         initDeviceManager(activity);
-        initSpecialDevices(activity);
+//        initSpecialDevices(activity); // Currently we don't need this
+    }
+
+    protected static RomUtil getRomUtil() {
+        if(s_inst != null) {
+            return s_inst.m_romUtil;
+        } else {
+            return null;
+        }
     }
 
     private static SafeAreaController getInstance(Activity activity) {
@@ -56,15 +64,19 @@ public class SafeAreaController {
     public static String getSafeArea(Activity act) {
         SafeAreaController inst = getInstance(act);
         /**
-         *  Practically the default rounded corner compat is better (some devices would provide a relatively larger inset)
-         *  If the device API should be applied, use inst.m_deviceMngr.getSafeRect(act)
+         *  Practically if a device has notch screen, it should be a rounded corner one
+         *  And we treat all rounded-corner devices with a fixed corner size
          */
         Rect safeRect = new Rect(0, 0, 0,0);
+        if(inst.m_romUtil.isOldDeviceOrSimulator()) {
+            // As with old devices or simulator, don't protect the rounded corners
+        } else {
+            safeRect = SafeAreaUtils.protectRoundCorner(inst.m_deviceMngr.isNotch(act));
+        }
         if(safeRect == null) {
             return "";
         }
-        safeRect = SafeAreaUtils.normalizeScreenRect(
-                SafeAreaUtils.protectRoundCorner(safeRect, act, inst.m_nonRoundedDevices), act);
+        safeRect = SafeAreaUtils.normalizeScreenRect(safeRect, act);
         JSONObject jsonRect = new JSONObject();
         try{
             jsonRect.put("left", safeRect.left);
@@ -76,6 +88,9 @@ public class SafeAreaController {
     }
 
     private void initDeviceManager(Activity activity) {
+        if(m_romUtil == null) {
+            m_romUtil = new RomUtil(activity);
+        }
         /**
          * Select a suitable device manager for different platforms:
          * 1. As with android P, use methods provided by android SDK
@@ -83,14 +98,12 @@ public class SafeAreaController {
          * 3. As with other cases, use different impl depends on manufacturers
          */
         int sdkInt = Build.VERSION.SDK_INT;
-        if(sdkInt >= Build.VERSION_CODES.P) {
-            m_deviceMngr = new PDeviceManagerImpl();
-        } else if (sdkInt < Build.VERSION_CODES.O) {
+//        if(sdkInt >= Build.VERSION_CODES.P) {
+//            m_deviceMngr = new PDeviceManagerImpl();
+//        } else
+            if (sdkInt < Build.VERSION_CODES.O) {
             m_deviceMngr = new DefaultDeviceManagerImpl();
         } else { // Select a manufacturer
-            if(m_romUtil == null) {
-                m_romUtil = new RomUtil(activity);
-            }
             if(m_romUtil.isHuaweiRom()) {
                 m_deviceMngr = new HwDeviceManagerImpl();
             } else if(m_romUtil.isXiaomi()) {
@@ -107,7 +120,7 @@ public class SafeAreaController {
         }
     }
 
-    private void initSpecialDevices(Activity activity) {
+    private void legacy_InitSpecialDevices(Activity activity) {
         m_nonRoundedDevices.clear();
         InputStream input = activity.getResources().openRawResource(R.raw.non_round_corner_device_list);
         try{
@@ -115,7 +128,7 @@ public class SafeAreaController {
             String line;
             while((line = reader.readLine()) != null) {
                 if(line.length() > 0) {
-                    m_nonRoundedDevices.add(line);
+                    m_nonRoundedDevices.add(line.trim());
                 }
             }
         }catch(Exception e) {

@@ -15,6 +15,14 @@ import android.view.WindowManager;
  * On Android P we use window insets to judge the safe area
  */
 class PDeviceManagerImpl implements IDeviceManager {
+
+    @Override
+    public boolean isNotch(Activity activity) {
+        Rect safeRect = this.getSafeRect(activity);
+        return safeRect != null && (safeRect.left != 0 || safeRect.top != 0 ||
+                safeRect.right != 0 || safeRect.bottom != 0);
+    }
+
     @Override
     public Rect getSafeRect(Activity activity) {
         if(activity == null) {

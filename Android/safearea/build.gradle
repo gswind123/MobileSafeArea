@@ -9,7 +9,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 28
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
 
     }
 
@@ -20,6 +20,15 @@ android {
         }
     }
 
+    android.libraryVariants.all { variant ->
+        variant.outputs.all {
+            if(variant.buildType.name == 'debug') {
+                outputFileName = 'safearea-debug.aar'
+            } else {
+                outputFileName = 'safearea-' +  android.defaultConfig.versionName + '.aar'
+            }
+        }
+    }
 }
 
 dependencies {

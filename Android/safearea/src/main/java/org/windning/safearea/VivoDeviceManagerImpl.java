@@ -15,6 +15,11 @@ class VivoDeviceManagerImpl implements IDeviceManager {
     private Class m_fitFeature;
     private Method m_getFeatureSupport;
 
+    @Override
+    public boolean isNotch(Activity activity) {
+        return isNotchScreen(activity);
+    }
+
     @Nullable
     @Override
     public Rect getSafeRect(Activity activity) {

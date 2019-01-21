@@ -17,4 +17,9 @@ class DefaultDeviceManagerImpl implements IDeviceManager {
     public void initWindowLayout(Activity activity, boolean enableNotch) {
         //Do nothing
     }
+
+    @Override
+    public boolean isNotch(Activity act) {
+        return false;
+    }
 }

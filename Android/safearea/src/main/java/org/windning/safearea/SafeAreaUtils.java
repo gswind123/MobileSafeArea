@@ -17,7 +17,7 @@ import java.util.ArrayList;
  */
 class SafeAreaUtils {
     private static final int DEFAULT_ROUND_CORNER_PADDING = 80; //pixel
-    public static final float DEFAULT_ROUND_CORNER_RATIO = 1.8f;
+    private static final float DEFAULT_ROUND_CORNER_RATIO = 1.8f;
 
     /**
      * Rotate the safe rect if the current activity is LANDSCAPE
@@ -37,11 +37,24 @@ class SafeAreaUtils {
     }
 
     /**
+     * If the current safe rect has an valid inset, fix it to a practised value
+     * XXX: set the fixed inset according to the device type and brand
+     */
+    public static Rect protectRoundCorner(boolean isNotch) {
+        if(isNotch) {
+            return new Rect(0, DEFAULT_ROUND_CORNER_PADDING, 0, DEFAULT_ROUND_CORNER_PADDING);
+        } else {
+            return new Rect(0, 0, 0, 0);
+        }
+    }
+
+    /**
      * As with rounded corner screens, a "min safe rect padding" should be applied
      * Here we assume that a device with screen ratio larger that 2:1 (height : width) is a "rounded corner" device
      * The input safe rect here should be based on PORTRAIT
+     * NOTE : this is an early version and has been legacy
      */
-    public static Rect protectRoundCorner(Rect safeRect, Activity activity, ArrayList<String> nonRoundDeviceList) {
+    private static Rect legacy_ProtectRoundCorner(Rect safeRect, Activity activity, ArrayList<String> nonRoundDeviceList) {
         if(safeRect == null || activity == null) {
             return null;
         }

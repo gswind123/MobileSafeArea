@@ -13,6 +13,25 @@ class HwDeviceManagerImpl implements IDeviceManager {
 
     private Class m_hwNotchSizeUtil;
     private Method m_getNotchSize;
+    private Method m_hasNotchInScreen;
+
+    @Override
+    public boolean isNotch(Activity activity) {
+        if(activity == null) {
+            return false;
+        }
+        try{
+            if(m_hwNotchSizeUtil == null) {
+                m_hwNotchSizeUtil = activity.getClassLoader().loadClass("com.huawei.android.util.HwNotchSizeUtil");
+            }
+            if(m_hasNotchInScreen != null) {
+                m_hasNotchInScreen = m_hwNotchSizeUtil.getMethod("hasNotchInScreen");
+            }
+            return (Boolean) m_hasNotchInScreen.invoke(null);
+        }catch(Exception ignore) {
+            return false;
+        }
+    }
 
     @Nullable
     @Override

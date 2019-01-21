@@ -6,6 +6,15 @@ import android.support.annotation.Nullable;
 
 class OppoDeviceManagerImpl implements IDeviceManager {
 
+    @Override
+    public boolean isNotch(Activity activity) {
+        try{
+            return activity.getPackageManager().hasSystemFeature("com.oppo.feature.screen.heteromorphism");
+        }catch(Exception ignore) {
+            return false;
+        }
+    }
+
     @Nullable
     @Override
     public Rect getSafeRect(Activity activity) {

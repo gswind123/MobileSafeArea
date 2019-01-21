@@ -11,6 +11,16 @@ class MiDeviceManagerImpl implements IDeviceManager {
     private static final int FLAG_NOTCH_PORTRAIT = 0x00000200;
     private static final int FLAG_NOTCH_LANDSCAPE = 0x00000400;
 
+    @Override
+    public boolean isNotch(Activity activity) {
+        try{
+            RomUtil romUtil = SafeAreaController.getRomUtil();
+            return "1".equals(romUtil.getSystemProperty("ro.miui.notch"));
+        }catch(Exception ignore) {
+            return false;
+        }
+    }
+
     @Nullable
     @Override
     public Rect getSafeRect(Activity activity) {
