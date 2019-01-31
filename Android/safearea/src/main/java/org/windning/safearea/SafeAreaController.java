@@ -98,10 +98,9 @@ public class SafeAreaController {
          * 3. As with other cases, use different impl depends on manufacturers
          */
         int sdkInt = Build.VERSION.SDK_INT;
-//        if(sdkInt >= Build.VERSION_CODES.P) {
-//            m_deviceMngr = new PDeviceManagerImpl();
-//        } else
-            if (sdkInt < Build.VERSION_CODES.O) {
+        if(sdkInt >= Build.VERSION_CODES.P) {
+            m_deviceMngr = new PDeviceManagerImpl();
+        } else if (sdkInt < Build.VERSION_CODES.O) {
             m_deviceMngr = new DefaultDeviceManagerImpl();
         } else { // Select a manufacturer
             if(m_romUtil.isHuaweiRom()) {
