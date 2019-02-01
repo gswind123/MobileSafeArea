@@ -3,6 +3,9 @@ package org.windning.safearea;
 import android.app.Activity;
 import android.graphics.Rect;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.support.annotation.MainThread;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -45,9 +48,15 @@ public class SafeAreaController {
         return s_inst;
     }
 
-    public static void initWindowLayout(Activity act, boolean enableNotch) {
-        SafeAreaController inst = getInstance(act);
-        inst.m_deviceMngr.initWindowLayout(act, enableNotch);
+    public static void initWindowLayout(final Activity act, final boolean enableNotch) {
+        final SafeAreaController inst = getInstance(act);
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                inst.m_deviceMngr.initWindowLayout(act, enableNotch);
+            }
+        });
     }
 
     /**
