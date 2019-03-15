@@ -1,14 +1,20 @@
 package org.windning.safearea;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Rect;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.view.DisplayCutout;
+import android.view.Surface;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowManager;
+
+import java.util.List;
 
 /**
  * Device mgr impl on android P
@@ -60,9 +66,27 @@ class PDeviceManagerImpl implements IDeviceManager {
     @RequiresApi(api = Build.VERSION_CODES.P)
     private Rect getWindowInsets(@NonNull Activity activity) {
         try{
+            boolean isLandscape = SafeAreaUtils.CheckIfLandscape(activity);
             WindowInsets insets = activity.getWindow().getDecorView().getRootWindowInsets();
-            Rect safeRect = new Rect(insets.getStableInsetLeft(), insets.getStableInsetTop(),
-                    insets.getStableInsetRight(), insets.getStableInsetBottom());
+            DisplayCutout cutout = insets.getDisplayCutout();
+            List<Rect> boundingRects = cutout.getBoundingRects();
+            Rect safeRect = new Rect(0, 0, 0, 0);
+            /* Here we use the standard of PORTRAIT orientation */
+            for(Rect rect : boundingRects) {
+                int top, bottom;
+                if(isLandscape) {
+                    top = rect.left;
+                    bottom = rect.right;
+                } else {
+                    top = rect.top;
+                    bottom = rect.bottom;
+                }
+                if(top == 0) {
+                    safeRect.top = Math.max(safeRect.top, bottom);
+                } else if (bottom == 0) {
+                    safeRect.bottom = Math.max(safeRect.bottom, top);
+                }
+            }
             /* Pick the larger value for top and bottom */
             safeRect.top = safeRect.bottom = Math.max(safeRect.top, safeRect.bottom);
             return safeRect;

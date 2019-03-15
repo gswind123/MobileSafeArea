@@ -1,6 +1,7 @@
 package org.windning.demo;
 
 import android.app.Activity;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -19,9 +20,6 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 String result = SafeAreaController.getSafeArea(MainActivity.this);
-                if(result ==  null || result.length() == 0) {
-                    result = "not avaiable";
-                }
                 text.setText(result);
             }
         });

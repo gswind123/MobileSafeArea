@@ -80,7 +80,7 @@ public class SafeAreaController {
         if(inst.m_romUtil.isOldDeviceOrSimulator()) {
             // As with old devices or simulator, don't protect the rounded corners
         } else {
-            safeRect = SafeAreaUtils.protectRoundCorner(inst.m_deviceMngr.isNotch(act));
+            safeRect = inst.m_deviceMngr.getSafeRect(act);
         }
         if(safeRect == null) {
             return "";
@@ -94,6 +94,12 @@ public class SafeAreaController {
             jsonRect.put("bottom", safeRect.bottom);
         }catch(JSONException ignore) {}
         return jsonRect.toString();
+    }
+
+    public static Rect getSystemWindowInsets(Activity activity) {
+        SafeAreaController inst = getInstance(activity);
+        Rect rect = inst.m_deviceMngr.getSafeRect(activity);
+        return rect;
     }
 
     private void initDeviceManager(Activity activity) {

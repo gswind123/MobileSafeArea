@@ -1,11 +1,14 @@
 package org.windning.safearea;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.QuickViewConstants;
 import android.content.pm.ActivityInfo;
 import android.graphics.Rect;
 import android.os.Build;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Surface;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -19,6 +22,24 @@ class SafeAreaUtils {
     private static final int DEFAULT_ROUND_CORNER_PADDING = 80; //pixel
     private static final float DEFAULT_ROUND_CORNER_RATIO = 1.8f;
 
+    public static boolean CheckIfLandscape(Context context) {
+        try{
+            WindowManager mgr = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE));
+            int orientation = mgr.getDefaultDisplay().getRotation();
+            switch(orientation) {
+                case Surface.ROTATION_0:
+                case Surface.ROTATION_180:
+                    return false; // portrait
+                case Surface.ROTATION_90:
+                case Surface.ROTATION_270:
+                default:
+                    return true;
+            }
+        }catch(NullPointerException ignore) {
+            return true; // use landscape for default
+        }
+    }
+
     /**
      * Rotate the safe rect if the current activity is LANDSCAPE
      * Safe rect calculated based on PORTRAIT should be applied
@@ -28,23 +49,11 @@ class SafeAreaUtils {
         if(activity == null || safeRect == null) {
             return null;
         }
-        int orientation = activity.getRequestedOrientation();
-        if(orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+        boolean isLandscape = SafeAreaUtils.CheckIfLandscape(activity);
+        if(isLandscape) {
             return new Rect(safeRect.top, safeRect.right, safeRect.bottom, safeRect.left);
         } else {
             return safeRect;
-        }
-    }
-
-    /**
-     * If the current safe rect has an valid inset, fix it to a practised value
-     * XXX: set the fixed inset according to the device type and brand
-     */
-    public static Rect protectRoundCorner(boolean isNotch) {
-        if(isNotch) {
-            return new Rect(0, DEFAULT_ROUND_CORNER_PADDING, 0, DEFAULT_ROUND_CORNER_PADDING);
-        } else {
-            return new Rect(0, 0, 0, 0);
         }
     }
 
