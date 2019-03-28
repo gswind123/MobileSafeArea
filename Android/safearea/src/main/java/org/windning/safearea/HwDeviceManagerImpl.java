@@ -39,6 +39,9 @@ class HwDeviceManagerImpl implements IDeviceManager {
         if(activity == null) {
             return null;
         }
+        if(!isNotch(activity)) {
+            return new Rect(0, 0, 0, 0);
+        }
         try{
             if(m_hwNotchSizeUtil == null) {
                 m_hwNotchSizeUtil = activity.getClassLoader().loadClass("com.huawei.android.util.HwNotchSizeUtil");

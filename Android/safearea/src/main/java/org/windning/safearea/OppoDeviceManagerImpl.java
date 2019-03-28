@@ -21,9 +21,9 @@ class OppoDeviceManagerImpl implements IDeviceManager {
         if(activity == null) {
             return null;
         }
+        int top = 0;
         boolean isNotchScreen = activity.getPackageManager().hasSystemFeature("com.oppo.feature.screen.heteromorphism");
         /* OPPO has a fixed notch size with height 80 pixels */
-        int top = 0;
         if(isNotchScreen) {
             top = 80;
         }

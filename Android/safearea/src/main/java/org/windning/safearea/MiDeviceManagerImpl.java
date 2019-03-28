@@ -28,9 +28,11 @@ class MiDeviceManagerImpl implements IDeviceManager {
             return null;
         }
         int top = 0;
-        int resId = activity.getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if(resId > 0) {
-            top = activity.getResources().getDimensionPixelSize(resId);
+        if(isNotch(activity)) {
+            int resId = activity.getResources().getIdentifier("status_bar_height", "dimen", "android");
+            if(resId > 0) {
+                top = activity.getResources().getDimensionPixelSize(resId);
+            }
         }
         return new Rect(0, top, 0, top/* bottom is the same with top */);
     }
