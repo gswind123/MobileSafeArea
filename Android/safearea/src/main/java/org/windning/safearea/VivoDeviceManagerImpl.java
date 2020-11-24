@@ -9,7 +9,7 @@ import android.util.TypedValue;
 
 import java.lang.reflect.Method;
 
-class VivoDeviceManagerImpl implements IDeviceManager {
+class VivoDeviceManagerImpl extends BaseDeviceManager {
     private static final int VIVO_HAS_NOTCH_DISPLAY = 0x00000020;
 
     private Class m_fitFeature;
@@ -17,29 +17,18 @@ class VivoDeviceManagerImpl implements IDeviceManager {
 
     @Override
     public boolean isNotch(Activity activity) {
-        return isNotchScreen(activity);
+        return false; // vivo doesn't support notch full screen on non android P devices
     }
 
     @Nullable
     @Override
     public Rect getSafeRect(Activity activity) {
-        if(activity == null) {
-            return null;
-        }
-        /* VIVO has a fixed notch size with height 27DP */
-        int top = 0;
-        if(isNotchScreen((activity))) {
-            DisplayMetrics dm = activity.getResources().getDisplayMetrics();
-            if(dm != null) {
-                top = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 27f, dm));
-            }
-        }
-        return new Rect(0, top, 0, top /* Apply the same bottom with top */);
+        return new Rect(0, 0, 0, 0); // vivo doesn't support notch full screen on non android P devices
     }
 
     @Override
     public void initWindowLayout(Activity activity, boolean enableNotch) {
-
+        SafeAreaUtils.initWindowLayoutOppoAndVivo(activity, enableNotch);
     }
 
     private boolean isNotchScreen(Context context) {
@@ -56,4 +45,20 @@ class VivoDeviceManagerImpl implements IDeviceManager {
             return false;
         }
     }
+
+    private Rect DEPRECATE_getSafeRect(Activity activity) {
+        if(activity == null) {
+            return null;
+        }
+        /* VIVO has a fixed notch size with height 27DP */
+        int top = 0;
+        if(isNotchScreen((activity))) {
+            DisplayMetrics dm = activity.getResources().getDisplayMetrics();
+            if(dm != null) {
+                top = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 27f, dm));
+            }
+        }
+        return new Rect(0, top, 0, top /* Apply the same bottom with top */);
+    }
+
 }

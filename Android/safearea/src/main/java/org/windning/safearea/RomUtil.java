@@ -65,7 +65,7 @@ class RomUtil {
         return m_isOldDeviceOrSimulator;
     }
 
-    protected String getSystemProperty(String name) {
+    public String getSystemProperty(String name) {
         if(!checkValidation()) {
            return null;
         }

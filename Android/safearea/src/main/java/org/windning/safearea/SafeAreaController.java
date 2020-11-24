@@ -24,7 +24,7 @@ import java.util.ArrayList;
 public class SafeAreaController {
     private static SafeAreaController s_inst;
 
-    private IDeviceManager m_deviceMngr;
+    private BaseDeviceManager m_deviceMngr;
     private RomUtil m_romUtil;
     private ArrayList<String> m_nonRoundedDevices = new ArrayList<>();
 
@@ -132,6 +132,7 @@ public class SafeAreaController {
         if(m_deviceMngr == null) {
             m_deviceMngr = new DefaultDeviceManagerImpl();
         }
+        m_deviceMngr.setRomUtil(m_romUtil);
     }
 
     private void legacy_InitSpecialDevices(Activity activity) {

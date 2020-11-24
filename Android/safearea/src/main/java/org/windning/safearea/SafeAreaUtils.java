@@ -6,6 +6,7 @@ import android.content.QuickViewConstants;
 import android.content.pm.ActivityInfo;
 import android.graphics.Rect;
 import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Surface;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -57,47 +59,55 @@ class SafeAreaUtils {
         }
     }
 
-    /**
-     * As with rounded corner screens, a "min safe rect padding" should be applied
-     * Here we assume that a device with screen ratio larger that 2:1 (height : width) is a "rounded corner" device
-     * The input safe rect here should be based on PORTRAIT
-     * NOTE : this is an early version and has been legacy
-     */
-    private static Rect legacy_ProtectRoundCorner(Rect safeRect, Activity activity, ArrayList<String> nonRoundDeviceList) {
-        if(safeRect == null || activity == null) {
-            return null;
-        }
+    public static Rect getPortraitScreenSize(Activity activity) {
         DisplayMetrics dm = activity.getResources().getDisplayMetrics();
-        if(dm.widthPixels == 0 || dm.heightPixels == 0) {
-            return safeRect; // invalid display metrics
+        Rect screenRect = new Rect(0, 0, dm.widthPixels, dm.heightPixels);
+        boolean isLandscape = SafeAreaUtils.CheckIfLandscape(activity);
+        if (isLandscape) {
+            screenRect.right = dm.heightPixels;
+            screenRect.bottom = dm.widthPixels;
         }
-
-        float ratio = 0;
-        if(dm.heightPixels > dm.widthPixels) {
-            ratio = ((float)dm.heightPixels) / dm.widthPixels;
-        } else {
-            ratio = ((float)dm.widthPixels) / dm.heightPixels;
-        }
-        if(ratio < DEFAULT_ROUND_CORNER_RATIO) {
-            return safeRect; // Not a rounded corner one
-        }
-        // Check if current devices is a specified "non-rounded-corner" device
-        if(nonRoundDeviceList != null) {
-            String curModel = Build.MODEL;
-            for(int i = 0, count = nonRoundDeviceList.size(); i < count; i++) {
-                String model = nonRoundDeviceList.get(i);
-                if(model != null && model.equals(curModel)) {
-                    return safeRect; // Do nothing when this is not a rounded corner device
-                }
-            }
-        }
-        // During this phase the devices is ensured to be de rounded-corner one
-        Rect newRect = new Rect(safeRect);
-        newRect.top = newRect.bottom = Math.max(Math.max(safeRect.top, safeRect.bottom), DEFAULT_ROUND_CORNER_PADDING);
-        return newRect;
+        return screenRect;
     }
 
-    public static void initWindowLayoutVivoAndOppo(Activity activity, boolean enableNotch) {
+    /**
+     * A "vital" notch is the kind that can't be ignored (that is, a non-vital notch could be ignored)
+     * A vital notch currently is the devices with a large cutoff area like IPHONE-X
+     * Note that the input rects should be normalized to PORTRAIT mode
+     */
+    public static boolean isVitalNotch(Rect notch, Rect screen) {
+        if(notch.width() == 0 || notch.height() == 0) {
+            return false;
+        }
+        /* A symmetrical notch is not vital when it's small and like a square */
+        float smallHeight = screen.height() * 0.05f;
+        float smallWidth = screen.width() * 0.2f;
+        if(notch.height() < smallHeight && notch.width() < smallWidth) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Get the first element from an array
+     * This is designed to provide an interface for non-java environment
+     */
+    public static /* Reflected */ Object getFirstElement(Object array) {
+        try{
+            return Array.get(array, 0);
+        }catch(Exception ignore) {
+            return null;
+        }
+    }
+
+    private static boolean isPixelSimilar(int a, int b) {
+        int delta = a - b;
+        int threshold = 5;
+        return delta >= -threshold && delta <= threshold;
+    }
+
+    @RequiresApi(api=Build.VERSION_CODES.O)
+    public static void initWindowLayoutOppoAndVivo(Activity activity, boolean enableNotch) {
         Window window = activity.getWindow();
         if(enableNotch) {
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);

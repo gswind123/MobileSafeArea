@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 
 import java.lang.reflect.Method;
 
-class MiDeviceManagerImpl implements IDeviceManager {
+class MiDeviceManagerImpl extends BaseDeviceManager {
     private static final int FLAG_NOTCH_IMMERSIVE = 0x00000100;
     private static final int FLAG_NOTCH_PORTRAIT = 0x00000200;
     private static final int FLAG_NOTCH_LANDSCAPE = 0x00000400;

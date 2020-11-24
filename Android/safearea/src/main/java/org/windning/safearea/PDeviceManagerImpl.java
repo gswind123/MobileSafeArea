@@ -7,6 +7,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.DisplayCutout;
 import android.view.Surface;
@@ -20,7 +21,7 @@ import java.util.List;
  * Device mgr impl on android P
  * On Android P we use window insets to judge the safe area
  */
-class PDeviceManagerImpl implements IDeviceManager {
+class PDeviceManagerImpl extends BaseDeviceManager {
 
     @Override
     public boolean isNotch(Activity activity) {
@@ -67,25 +68,27 @@ class PDeviceManagerImpl implements IDeviceManager {
     private Rect getWindowInsets(@NonNull Activity activity) {
         try{
             boolean isLandscape = SafeAreaUtils.CheckIfLandscape(activity);
+            /* Parse screen size */
+            Rect screenRect = SafeAreaUtils.getPortraitScreenSize(activity);
+            /* Parse notch rects */
             WindowInsets insets = activity.getWindow().getDecorView().getRootWindowInsets();
             DisplayCutout cutout = insets.getDisplayCutout();
             List<Rect> boundingRects = cutout.getBoundingRects();
             Rect safeRect = new Rect(0, 0, 0, 0);
             /* Here we use the standard of PORTRAIT orientation */
             for(Rect rect : boundingRects) {
-                int top, bottom;
+                Rect normalizedRect = new Rect();
                 if(isLandscape) {
-                    top = rect.left;
-                    bottom = rect.right;
+                    normalizedRect.right = rect.height();
+                    normalizedRect.bottom = rect.width();
                 } else {
-                    top = rect.top;
-                    bottom = rect.bottom;
+                    normalizedRect.right = rect.width();
+                    normalizedRect.bottom = rect.height();
                 }
-                if(top == 0) {
-                    safeRect.top = Math.max(safeRect.top, bottom);
-                } else if (bottom == 0) {
-                    safeRect.bottom = Math.max(safeRect.bottom, top);
+                if(!SafeAreaUtils.isVitalNotch(normalizedRect, screenRect)) {
+                    continue; // skip non-vital notch rects
                 }
+                safeRect.top = normalizedRect.height();
             }
             /* Pick the larger value for top and bottom */
             safeRect.top = safeRect.bottom = Math.max(safeRect.top, safeRect.bottom);

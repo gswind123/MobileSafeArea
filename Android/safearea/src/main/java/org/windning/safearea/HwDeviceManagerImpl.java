@@ -3,12 +3,12 @@ package org.windning.safearea;
 import android.app.Activity;
 import android.graphics.Rect;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.WindowManager;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 
-class HwDeviceManagerImpl implements IDeviceManager {
+class HwDeviceManagerImpl extends BaseDeviceManager {
     private static final int HW_FLAG_NOTCH_SUPPORT = 0x00010000;
 
     private Class m_hwNotchSizeUtil;
@@ -24,7 +24,7 @@ class HwDeviceManagerImpl implements IDeviceManager {
             if(m_hwNotchSizeUtil == null) {
                 m_hwNotchSizeUtil = activity.getClassLoader().loadClass("com.huawei.android.util.HwNotchSizeUtil");
             }
-            if(m_hasNotchInScreen != null) {
+            if(m_hasNotchInScreen == null) {
                 m_hasNotchInScreen = m_hwNotchSizeUtil.getMethod("hasNotchInScreen");
             }
             return (Boolean) m_hasNotchInScreen.invoke(null);
@@ -46,11 +46,16 @@ class HwDeviceManagerImpl implements IDeviceManager {
             if(m_hwNotchSizeUtil == null) {
                 m_hwNotchSizeUtil = activity.getClassLoader().loadClass("com.huawei.android.util.HwNotchSizeUtil");
             }
-            if(m_getNotchSize != null) {
+            if(m_getNotchSize == null) {
                 m_getNotchSize = m_hwNotchSizeUtil.getMethod("getNotchSize");
             }
             int[] ret = (int[]) m_getNotchSize.invoke(null);
-            return new Rect(0, ret[1], 0, 0);
+            Rect notch = new Rect(0, 0, ret[0], ret[1]);
+            Rect screenRect = SafeAreaUtils.getPortraitScreenSize(activity);
+            if(!SafeAreaUtils.isVitalNotch(notch, screenRect)) {
+                notch = new Rect(0, 0, 0, 0);
+            }
+            return new Rect(0, notch.height(), 0, notch.height());
         }catch(Exception ignore) {
             return new Rect(0,0,0,0); // Huawei util not valid, ingore this
         }
@@ -63,11 +68,15 @@ class HwDeviceManagerImpl implements IDeviceManager {
         }
         WindowManager.LayoutParams lp = activity.getWindow().getAttributes();
         try{
-            Field field = lp.getClass().getDeclaredField("hwFlags");
-            field.setAccessible(true);
-            if(enableNotch) {
-                field.set(lp, HW_FLAG_NOTCH_SUPPORT);
-            }
-        }catch(Exception ignore) {}
+            Class layoutParamsExCls = Class.forName("com.huawei.android.view.LayoutParamsEx");
+            Constructor con = layoutParamsExCls.getConstructor(WindowManager.LayoutParams.class);
+            Object layoutParamsExObj = con.newInstance(lp);
+            Method method = layoutParamsExCls.getMethod(enableNotch ? "addHwFlags" : "clearHwFlags", int.class);
+            method.invoke(layoutParamsExObj, HW_FLAG_NOTCH_SUPPORT);
+        } catch(ClassNotFoundException ignore) {
+            // not notch device, ignore this
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 }
